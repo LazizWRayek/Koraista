@@ -65,7 +65,7 @@ export class ResultScene extends Phaser.Scene {
 
     menuBtn.on('pointerdown', () => {
       resetState();
-      this.scene.start('MenuScene');
+      this.scene.start('MainMenuScene');
     });
   }
 }

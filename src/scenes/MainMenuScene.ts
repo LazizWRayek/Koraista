@@ -69,7 +69,7 @@ export class MainMenuScene extends Phaser.Scene {
     penaltyBtn.on('pointerover', () => penaltyBtn.setColor(HEX.white));
     penaltyBtn.on('pointerout', () => penaltyBtn.setColor(HEX.cyan));
     penaltyBtn.on('pointerdown', () => {
-      this.scene.start('PenaltyShootoutLobby');
+      this.scene.start('MenuScene');
     });
 
     // Language toggle
@@ -97,7 +97,10 @@ export class MainMenuScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
 
     settingsBtn.on('pointerdown', () => {
-      this.scene.start('SettingsScene');
+      // Settings not yet implemented — toggle language as placeholder
+      const currentLang = getLang();
+      setLang(currentLang === 'ar' ? 'en' : 'ar');
+      this.scene.restart();
     });
 
     // Version

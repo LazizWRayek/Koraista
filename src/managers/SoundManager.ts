@@ -252,5 +252,8 @@ export function stopCrowdAmbience(): void {
 export function updateCrowdVolume(): void {
   if (crowdGain) {
     crowdGain.gain.value = muted ? 0 : musicVolume * 0.15;
+  } else if (!muted) {
+    // If unmuting but crowd was never started, start it now
+    startCrowdAmbience();
   }
 }

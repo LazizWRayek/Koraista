@@ -15,6 +15,13 @@ import type { Edition } from '../data/types';
 
 interface LobbyData {
   editions: Edition[];
+  playerNames?: string[];
+  playMode?: PlayMode;
+  winCondition?: WinCondition;
+  hasReferee?: boolean;
+  maxCards?: number;
+  maxTime?: number;
+  targetScore?: number;
 }
 
 export class LobbyScene extends Phaser.Scene {
@@ -31,10 +38,28 @@ export class LobbyScene extends Phaser.Scene {
     super({ key: 'LobbyScene' });
   }
 
+  private getLobbyData(): LobbyData {
+    return {
+      editions: this.editions,
+      playerNames: [...this.playerNames],
+      playMode: this.playMode,
+      winCondition: this.winCondition,
+      hasReferee: this.hasReferee,
+      maxCards: this.maxCards,
+      maxTime: this.maxTime,
+      targetScore: this.targetScore,
+    };
+  }
+
   init(data: LobbyData): void {
-    if (data?.editions) {
-      this.editions = data.editions;
-    }
+    if (data?.editions) this.editions = data.editions;
+    if (data?.playerNames) this.playerNames = data.playerNames;
+    if (data?.playMode) this.playMode = data.playMode;
+    if (data?.winCondition) this.winCondition = data.winCondition;
+    if (data?.hasReferee !== undefined) this.hasReferee = data.hasReferee;
+    if (data?.maxCards !== undefined) this.maxCards = data.maxCards;
+    if (data?.maxTime !== undefined) this.maxTime = data.maxTime;
+    if (data?.targetScore !== undefined) this.targetScore = data.targetScore;
   }
 
   create(): void {
@@ -117,7 +142,7 @@ export class LobbyScene extends Phaser.Scene {
           .setInteractive({ useHandCursor: true });
         removeBtn.on('pointerdown', () => {
           this.playerNames.splice(i, 1);
-          this.scene.restart({ editions: this.editions });
+          this.scene.restart(this.getLobbyData());
         });
       }
 
@@ -147,7 +172,7 @@ export class LobbyScene extends Phaser.Scene {
 
       addBtn.on('pointerdown', () => {
         this.playerNames.push(`Player ${this.playerNames.length + 1}`);
-        this.scene.restart({ editions: this.editions });
+        this.scene.restart(this.getLobbyData());
       });
       y += 30;
     }
@@ -314,7 +339,7 @@ export class LobbyScene extends Phaser.Scene {
 
       btn.on('pointerdown', () => {
         onChange(i);
-        this.scene.restart({ editions: this.editions });
+        this.scene.restart(this.getLobbyData());
       });
     });
   }

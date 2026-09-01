@@ -301,8 +301,8 @@ export const rankCards: RankCard[] = [
     items: [
       { ar: 'جاست فونتين 1958 (13 هدف)', en: 'Just Fontaine 1958 (13 goals)' },
       { ar: 'جيرد مولر 1970 (10 أهداف)', en: 'Gerd Müller 1970 (10 goals)' },
-      { ar: 'كلوزه 2002 (5 أهداف)', en: 'Klose 2002 (5 goals)' },
       { ar: 'هاري كين 2018 (6 أهداف)', en: 'Harry Kane 2018 (6 goals)' },
+      { ar: 'كلوزه 2002 (5 أهداف)', en: 'Klose 2002 (5 goals)' },
     ],
   },
   {

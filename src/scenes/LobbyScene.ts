@@ -286,7 +286,7 @@ export class LobbyScene extends Phaser.Scene {
   private addToggle(x: number, y: number, labels: string[], activeIdx: number, onChange: (idx: number) => void): void {
     const gap = 10;
     const totalWidth = labels.length * 90 + (labels.length - 1) * gap;
-    let startX = x - totalWidth / 2 + 45;
+    const startX = x - totalWidth / 2 + 45;
 
     labels.forEach((label, i) => {
       const isActive = i === activeIdx;

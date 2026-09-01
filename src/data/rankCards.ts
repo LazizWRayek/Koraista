@@ -110,7 +110,7 @@ export const rankCards: RankCard[] = [
       { ar: 'رونالدو (130+)', en: 'Ronaldo (130+)' },
       { ar: 'علي دائي (109)', en: 'Ali Daei (109)' },
       { ar: 'ميسي (106+)', en: 'Messi (106+)' },
-      { ar: 'سونال (50+)', en: 'Sunil Chhetri (90+)' },
+      { ar: 'سونيل تشيتري (90+)', en: 'Sunil Chhetri (90+)' },
     ],
   },
   {

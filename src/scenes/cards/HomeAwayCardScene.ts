@@ -181,7 +181,12 @@ export class HomeAwayCardScene extends Phaser.Scene {
     // Correct / Wrong buttons
     const player = getCurrentPlayer();
 
+    let buttonsHandled = false;
     const correctBtn = createButton(this, cx - 80, 560, '✅ CORRECT', () => {
+      if (buttonsHandled) return;
+      buttonsHandled = true;
+      correctBtn.destroy();
+      wrongBtn.destroy();
       awardPoints(player.id, points, 'homeaway', true);
       spawnConfetti(this, cx, 500);
       scorePopAnimation(this, cx, 500, `+${points}`);
@@ -189,6 +194,10 @@ export class HomeAwayCardScene extends Phaser.Scene {
     }, { fontSize: '18px', paddingX: 16, paddingY: 8, bgColor: HEX.green });
 
     const wrongBtn = createButton(this, cx + 80, 560, '❌ WRONG', () => {
+      if (buttonsHandled) return;
+      buttonsHandled = true;
+      correctBtn.destroy();
+      wrongBtn.destroy();
       awardPoints(player.id, 0, 'homeaway', false);
       this.showNext();
     }, { fontSize: '18px', paddingX: 16, paddingY: 8, bgColor: HEX.crimson });

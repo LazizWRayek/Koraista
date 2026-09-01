@@ -161,7 +161,6 @@ export class RankCardScene extends Phaser.Scene {
   private refreshItems(): void {
     // Remove all items and redraw
     this.children.removeAll(true);
-    this.drawItems();
 
     const cx = this.scale.width / 2;
     const player = getCurrentPlayer();
@@ -186,6 +185,8 @@ export class RankCardScene extends Phaser.Scene {
         fontSize: '12px', fontFamily: FONT.body, color: HEX.textMuted, fontStyle: 'italic',
       })
       .setOrigin(0.5);
+
+    this.drawItems();
 
     if (!this.answered) {
       createButton(this, cx, 700, '✓  SUBMIT', () => this.checkAnswer(), {

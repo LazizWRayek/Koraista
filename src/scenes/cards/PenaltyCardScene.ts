@@ -3,6 +3,7 @@ import { HEX, FONT, COLORS } from '../../utils/theme';
 import { createButton, drawGrassBackground, drawHeaderBar, slideIn, scorePopAnimation, spawnConfetti, t } from '../../utils/ui';
 import { getCurrentPlayer, awardPoints, advancePlayer, isGameOver } from '../../managers/GameState';
 import { getCardManager } from '../GameplayScene';
+import { playGoal, playSave } from '../../managers/SoundManager';
 import type { PenaltyCard } from '../../data/types';
 
 export class PenaltyCardScene extends Phaser.Scene {
@@ -182,12 +183,14 @@ export class PenaltyCardScene extends Phaser.Scene {
 
     if (correct) {
       const gained = this.bet * 2;
+      playGoal();
       awardPoints(player.id, gained, 'penalty', true);
       spawnConfetti(this, cx, 500);
       scorePopAnimation(this, cx, 480, gained > 0 ? `+${gained}` : '+0');
       this.cameras.main.shake(300, 0.01);
     } else {
       // Lose the bet
+      playSave();
       awardPoints(player.id, this.bet, 'penalty', false);
       if (this.bet > 0) {
         scorePopAnimation(this, cx, 480, `-${this.bet}`);

@@ -3,6 +3,7 @@ import { HEX, FONT, COLORS } from '../../utils/theme';
 import { createButton, drawGrassBackground, drawHeaderBar, slideIn, scorePopAnimation, spawnConfetti, t, drawTimerRing } from '../../utils/ui';
 import { getCurrentPlayer, awardPoints, advancePlayer, isGameOver } from '../../managers/GameState';
 import { getCardManager } from '../GameplayScene';
+import { playCorrect, playWrong, playTick } from '../../managers/SoundManager';
 import type { FlashbackCard } from '../../data/types';
 
 const TIMER_SECONDS = 15;
@@ -108,6 +109,7 @@ export class FlashbackCardScene extends Phaser.Scene {
         this.timerGfx = drawTimerRing(this, cx, 100, 25, this.timeLeft / TIMER_SECONDS);
         if (this.timeLeft <= 5) {
           this.timerText?.setColor(HEX.crimson);
+          playTick();
         }
         if (this.timeLeft <= 0 && !this.answered) {
           this.answered = true;
@@ -122,10 +124,12 @@ export class FlashbackCardScene extends Phaser.Scene {
     const player = getCurrentPlayer();
 
     if (correct) {
+      playCorrect();
       awardPoints(player.id, 1, 'flashback', true);
       spawnConfetti(this, cx, 400);
       scorePopAnimation(this, cx, 350, '+1');
     } else {
+      playWrong();
       awardPoints(player.id, 0, 'flashback', false);
     }
 

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { HEX, FONT, COLORS } from '../utils/theme';
+import { initAudio, playWhistle } from '../managers/SoundManager';
 
 export class SplashScene extends Phaser.Scene {
   constructor() {
@@ -7,6 +8,10 @@ export class SplashScene extends Phaser.Scene {
   }
 
   create(): void {
+    // Initialize audio on first scene (needs user gesture context)
+    this.input.once('pointerdown', () => {
+      initAudio();
+    });
     const cx = this.scale.width / 2;
     const cy = this.scale.height / 2;
 
@@ -97,6 +102,7 @@ export class SplashScene extends Phaser.Scene {
     });
 
     // 4. Transition to MainMenu
+    this.time.delayedCall(1800, () => playWhistle());
     this.time.delayedCall(2200, () => {
       this.cameras.main.fadeOut(400, 0, 0, 0);
       this.cameras.main.once('camerafadeoutcomplete', () => {

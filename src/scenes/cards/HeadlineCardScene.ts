@@ -3,6 +3,7 @@ import { HEX, FONT, COLORS } from '../../utils/theme';
 import { createButton, drawGrassBackground, drawHeaderBar, slideIn, scorePopAnimation, spawnConfetti, t } from '../../utils/ui';
 import { getCurrentPlayer, awardPoints, advancePlayer, isGameOver } from '../../managers/GameState';
 import { getCardManager } from '../GameplayScene';
+import { playCorrect, playWrong } from '../../managers/SoundManager';
 import type { HeadlineCard } from '../../data/types';
 
 export class HeadlineCardScene extends Phaser.Scene {
@@ -141,10 +142,12 @@ export class HeadlineCardScene extends Phaser.Scene {
     bg.setFillStyle(color, 0.3);
 
     if (correct) {
+      playCorrect();
       awardPoints(player.id, 1, 'headline', true);
       spawnConfetti(this, cx, y);
       scorePopAnimation(this, cx, y - 40, '+1');
     } else {
+      playWrong();
       awardPoints(player.id, 0, 'headline', false);
     }
 

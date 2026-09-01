@@ -3,6 +3,7 @@ import { HEX, FONT, COLORS } from '../../utils/theme';
 import { createButton, drawGrassBackground, drawHeaderBar, slideIn, scorePopAnimation, spawnConfetti, t } from '../../utils/ui';
 import { getCurrentPlayer, awardPoints, advancePlayer, isGameOver } from '../../managers/GameState';
 import { getCardManager } from '../GameplayScene';
+import { playCorrect, playWrong } from '../../managers/SoundManager';
 import type { RankCard } from '../../data/types';
 
 export class RankCardScene extends Phaser.Scene {
@@ -203,11 +204,13 @@ export class RankCardScene extends Phaser.Scene {
     const player = getCurrentPlayer();
 
     if (correct) {
+      playCorrect();
       awardPoints(player.id, 1, 'rank', true);
       spawnConfetti(this, this.scale.width / 2, 400);
       scorePopAnimation(this, this.scale.width / 2, 350, '+1');
       this.cameras.main.shake(200, 0.005);
     } else {
+      playWrong();
       awardPoints(player.id, 0, 'rank', false);
     }
 

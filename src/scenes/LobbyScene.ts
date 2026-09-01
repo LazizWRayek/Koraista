@@ -80,7 +80,16 @@ export class LobbyScene extends Phaser.Scene {
     // Player management
     y += 50;
     this.addSectionLabel(cx, y, 'PLAYERS');
-    y += 25;
+    y += 15;
+    this.add
+      .text(cx, y, '(tap name to edit)', {
+        fontSize: '10px',
+        fontFamily: FONT.body,
+        color: HEX.textDark,
+        fontStyle: 'italic',
+      })
+      .setOrigin(0.5);
+    y += 18;
 
     for (let i = 0; i < this.playerNames.length; i++) {
       const playerY = y + i * 35;
@@ -91,6 +100,11 @@ export class LobbyScene extends Phaser.Scene {
           color: HEX.white,
         })
         .setOrigin(0, 0.5);
+
+      // Edit icon
+      this.add
+        .text(cx + 90, playerY, '✏️', { fontSize: '14px' })
+        .setOrigin(0.5);
 
       // Remove button (if more than 2 players)
       if (this.playerNames.length > 2) {
@@ -107,17 +121,14 @@ export class LobbyScene extends Phaser.Scene {
         });
       }
 
-      // Edit name on click
+      // Edit name on click — use browser prompt for text input
       label.setInteractive({ useHandCursor: true });
       label.on('pointerdown', () => {
-        // Cycle through preset names
-        const presets = ['Player', 'Koraista', 'Legend', 'Captain', 'Striker', 'Keeper', 'Coach', 'Fan'];
-        const numStr = this.playerNames[i].replace(/[^0-9]/g, '') || `${i + 1}`;
-        const currentBase = this.playerNames[i].replace(/\s*\d+$/, '');
-        const currentIdx = presets.indexOf(currentBase);
-        const nextBase = presets[(currentIdx + 1) % presets.length];
-        this.playerNames[i] = `${nextBase} ${numStr}`;
-        label.setText(`${i + 1}. ${this.playerNames[i]}`);
+        const newName = window.prompt('Enter player name:', this.playerNames[i]);
+        if (newName && newName.trim().length > 0) {
+          this.playerNames[i] = newName.trim().substring(0, 20);
+          label.setText(`${i + 1}. ${this.playerNames[i]}`);
+        }
       });
     }
 

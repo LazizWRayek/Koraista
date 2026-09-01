@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { HEX, FONT, COLORS } from '../utils/theme';
 import { createButton, drawGrassBackground, slideIn, getLang, setLang } from '../utils/ui';
+import { initAudio, playTap, startCrowdAmbience, isMuted, toggleMute, updateCrowdVolume } from '../managers/SoundManager';
 
 export class MainMenuScene extends Phaser.Scene {
   constructor() {
@@ -9,6 +10,9 @@ export class MainMenuScene extends Phaser.Scene {
 
   create(): void {
     const cx = this.scale.width / 2;
+
+    initAudio();
+    startCrowdAmbience();
 
     this.cameras.main.fadeIn(300);
     drawGrassBackground(this);
@@ -90,17 +94,17 @@ export class MainMenuScene extends Phaser.Scene {
 
     // Settings gear
     const settingsBtn = this.add
-      .text(20, this.scale.height - 30, '⚙️', {
+      .text(20, this.scale.height - 30, isMuted() ? '🔇' : '🔊', {
         fontSize: '22px',
       })
       .setOrigin(0, 0.5)
       .setInteractive({ useHandCursor: true });
 
     settingsBtn.on('pointerdown', () => {
-      // Settings not yet implemented — toggle language as placeholder
-      const currentLang = getLang();
-      setLang(currentLang === 'ar' ? 'en' : 'ar');
-      this.scene.restart();
+      playTap();
+      toggleMute();
+      updateCrowdVolume();
+      settingsBtn.setText(isMuted() ? '🔇' : '🔊');
     });
 
     // Version

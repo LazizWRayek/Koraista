@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { HEX, FONT, COLORS } from '../utils/theme';
 import { createButton, drawGrassBackground, slideIn, spawnConfetti } from '../utils/ui';
 import { getState, getStandings, getTeamScores, getMVP, resetState } from '../managers/GameState';
+import { playWin, stopCrowdAmbience } from '../managers/SoundManager';
 
 export class FinalResultScene extends Phaser.Scene {
   constructor() {
@@ -18,6 +19,8 @@ export class FinalResultScene extends Phaser.Scene {
     const mvp = getMVP();
 
     // Trophy + confetti
+    stopCrowdAmbience();
+    playWin();
     this.add.text(cx, 60, '🏆', { fontSize: '64px' }).setOrigin(0.5);
     this.time.delayedCall(300, () => spawnConfetti(this, cx, 60));
 

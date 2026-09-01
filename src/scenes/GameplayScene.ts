@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { HEX, FONT, COLORS } from '../utils/theme';
 import { createButton, drawGrassBackground, drawHeaderBar, slideIn, spawnConfetti, t } from '../utils/ui';
+import { playTap, playCardDraw, startCrowdAmbience } from '../managers/SoundManager';
 import {
   getState,
   getCurrentPlayer,
@@ -31,6 +32,7 @@ export class GameplayScene extends Phaser.Scene {
     const gs = getState();
     cardManager = new CardManager(gs.config.editions);
 
+    startCrowdAmbience();
     drawGrassBackground(this);
     drawHeaderBar(this);
     slideIn(this, 'right');
@@ -283,6 +285,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private navigateToCard(type: CardType): void {
+    playCardDraw();
     const sceneMap: Record<CardType, string> = {
       rank: 'RankCardScene',
       headline: 'HeadlineCardScene',

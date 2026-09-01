@@ -3,6 +3,7 @@ import { HEX, FONT, COLORS } from '../../utils/theme';
 import { createButton, drawGrassBackground, drawHeaderBar, slideIn, scorePopAnimation, spawnConfetti, t } from '../../utils/ui';
 import { getCurrentPlayer, awardPoints, advancePlayer, isGameOver } from '../../managers/GameState';
 import { getCardManager } from '../GameplayScene';
+import { playCorrect, playWrong } from '../../managers/SoundManager';
 import type { HomeAwayCard } from '../../data/types';
 
 export class HomeAwayCardScene extends Phaser.Scene {
@@ -187,6 +188,7 @@ export class HomeAwayCardScene extends Phaser.Scene {
       buttonsHandled = true;
       correctBtn.destroy();
       wrongBtn.destroy();
+      playCorrect();
       awardPoints(player.id, points, 'homeaway', true);
       spawnConfetti(this, cx, 500);
       scorePopAnimation(this, cx, 500, `+${points}`);
@@ -198,6 +200,7 @@ export class HomeAwayCardScene extends Phaser.Scene {
       buttonsHandled = true;
       correctBtn.destroy();
       wrongBtn.destroy();
+      playWrong();
       awardPoints(player.id, 0, 'homeaway', false);
       this.showNext();
     }, { fontSize: '18px', paddingX: 16, paddingY: 8, bgColor: HEX.crimson });

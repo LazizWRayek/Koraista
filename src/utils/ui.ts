@@ -122,7 +122,7 @@ export function createPanel(
   y: number,
   width: number,
   height: number,
-  accent = COLORS.crimson,
+  accent: number = COLORS.crimson,
   alpha = 0.88,
 ): Phaser.GameObjects.Rectangle {
   const panel = scene.add.rectangle(x, y, width, height, COLORS.darkNavy, alpha);
@@ -135,7 +135,7 @@ export function createPill(
   x: number,
   y: number,
   label: string,
-  color = HEX.gold,
+  color: string = HEX.gold,
 ): Phaser.GameObjects.Text {
   return scene.add.text(x, y, label, {
     fontSize: '11px',

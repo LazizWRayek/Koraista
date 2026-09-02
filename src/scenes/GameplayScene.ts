@@ -1,14 +1,14 @@
 import Phaser from 'phaser';
 import { HEX, FONT, COLORS } from '../utils/theme';
-import { createButton, drawGrassBackground, drawHeaderBar, slideIn, spawnConfetti, t } from '../utils/ui';
+import { createButton, createPanel, createPill, drawGrassBackground, drawHeaderBar, slideIn } from '../utils/ui';
 import { playTap, playCardDraw, startCrowdAmbience } from '../managers/SoundManager';
 import {
   getState,
   getCurrentPlayer,
-  advancePlayer,
   isGameOver,
   getStandings,
   getTeamScores,
+  getReferee,
   saveState,
 } from '../managers/GameState';
 import { CardManager } from '../managers/CardManager';
@@ -30,7 +30,7 @@ export class GameplayScene extends Phaser.Scene {
 
   create(): void {
     const gs = getState();
-    cardManager = new CardManager(gs.config.editions);
+    cardManager = new CardManager(gs.config.editions, gs.config.questionPool);
 
     startCrowdAmbience();
     drawGrassBackground(this);
@@ -69,20 +69,32 @@ export class GameplayScene extends Phaser.Scene {
     // Scoreboard
     this.drawScoreboard();
 
-    // Current player indicator
+    const referee = getReferee();
+
+    createPanel(this, cx, 102, 420, 78, COLORS.gold, 0.78);
     const currentPlayer = getCurrentPlayer();
     this.add
-      .text(cx, 80, `${currentPlayer.name}'s Turn`, {
-        fontSize: '22px',
+      .text(cx, 82, `${currentPlayer.name}'s Turn`, {
+        fontSize: '24px',
         fontFamily: FONT.title,
-        color: HEX.gold,
+        color: HEX.white,
       })
       .setOrigin(0.5);
+    createPill(this, cx, 110, gs.config.questionPool === 'elite' ? 'ELITE QUESTIONS' : 'ALL-STAR MIX', gs.config.questionPool === 'elite' ? HEX.gold : HEX.cyan);
+    if (referee) {
+      this.add
+        .text(cx, 136, `Referee: ${referee.name}`, {
+          fontSize: '11px',
+          fontFamily: FONT.body,
+          color: HEX.textMuted,
+        })
+        .setOrigin(0.5);
+    }
 
     // Streak indicator
     if (currentPlayer.stats.streak >= 3) {
       this.add
-        .text(cx, 105, `🔥 ${currentPlayer.stats.streak} streak!`, {
+        .text(cx, 162, `🔥 ${currentPlayer.stats.streak} streak!`, {
           fontSize: '14px',
           fontFamily: FONT.body,
           color: HEX.crimson,
@@ -105,7 +117,7 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     this.add
-      .text(cx, 130, progressText, {
+      .text(cx, 182, progressText, {
         fontSize: '13px',
         fontFamily: FONT.body,
         color: HEX.textMuted,
@@ -114,7 +126,7 @@ export class GameplayScene extends Phaser.Scene {
 
     // Card type buttons (draw a card)
     const availableTypes = this.getAvailableCardTypes();
-    const btnY = 200;
+    const btnY = 235;
     const cardTypeInfo: { type: CardType; label: string; emoji: string; color: string }[] = [
       { type: 'rank', label: 'RANK', emoji: '📊', color: HEX.crimson },
       { type: 'headline', label: 'HEADLINE', emoji: '📰', color: HEX.cyan },
@@ -131,6 +143,17 @@ export class GameplayScene extends Phaser.Scene {
     const gapX = 15;
     const gapY = 15;
 
+    if (filtered.length === 0) {
+      this.add
+        .text(cx, 320, 'No cards left in this pool.\nBlow the whistle and go to final standings.', {
+          fontSize: '16px',
+          fontFamily: FONT.body,
+          color: HEX.white,
+          align: 'center',
+        })
+        .setOrigin(0.5);
+    }
+
     filtered.forEach((info, i) => {
       const col = i % cols;
       const row = Math.floor(i / cols);
@@ -141,8 +164,12 @@ export class GameplayScene extends Phaser.Scene {
     });
 
     // Random card button
-    const randomY = btnY + Math.ceil(filtered.length / cols) * (cardH + gapY) + 20;
-    createButton(this, cx, randomY, '🎲  RANDOM CARD', () => {
+    const randomY = btnY + Math.ceil(Math.max(filtered.length, 1) / cols) * (cardH + gapY) + 20;
+    createButton(this, cx, randomY, filtered.length === 0 ? '🏁  FINAL STANDINGS' : '🎲  MATCHDAY DRAW', () => {
+      if (filtered.length === 0) {
+        this.scene.start('FinalResultScene');
+        return;
+      }
       const card = getCardManager().drawRandom(availableTypes);
       if (card) {
         this.navigateToCard(card.type);
@@ -172,8 +199,8 @@ export class GameplayScene extends Phaser.Scene {
       const teamScores = getTeamScores();
       teamScores.forEach((ts, i) => {
         const x = i === 0 ? 60 : this.scale.width - 60;
-        this.add
-          .text(x, 20, `${ts.team.name}`, {
+            this.add
+              .text(x, 20, `${ts.team.name}`, {
             fontSize: '12px',
             fontFamily: FONT.body,
             color: ts.team.color,
@@ -231,7 +258,7 @@ export class GameplayScene extends Phaser.Scene {
     border.strokeRoundedRect(x - w / 2, y - h / 2, w, h, 8);
 
     this.add
-      .text(x, y - 15, `${emoji} ${label}`, {
+      .text(x, y - 18, `${emoji} ${label}`, {
         fontSize: '14px',
         fontFamily: FONT.title,
         color,
@@ -239,12 +266,15 @@ export class GameplayScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(x, y + 15, `${remaining} cards`, {
+      .text(x, y + 5, `${remaining} cards`, {
         fontSize: '11px',
         fontFamily: FONT.body,
         color: HEX.textMuted,
       })
       .setOrigin(0.5);
+
+    const gs = getState();
+    createPill(this, x, y + 28, gs.config.questionPool === 'elite' ? 'HARD MODE' : 'MIXED', color);
 
     bg.on('pointerover', () => {
       border.clear();

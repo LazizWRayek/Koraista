@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { HEX, FONT, COLORS } from '../../utils/theme';
-import { createButton, drawGrassBackground, drawHeaderBar, slideIn, scorePopAnimation, spawnConfetti, t } from '../../utils/ui';
-import { getCurrentPlayer, awardPoints, advancePlayer, isGameOver } from '../../managers/GameState';
+import { createButton, createPanel, createPill, drawGrassBackground, drawHeaderBar, slideIn, scorePopAnimation, spawnConfetti, t } from '../../utils/ui';
+import { getCurrentPlayer, getReferee, getState, awardPoints, advancePlayer, isGameOver } from '../../managers/GameState';
 import { getCardManager } from '../GameplayScene';
 import { playCorrect, playWrong } from '../../managers/SoundManager';
 import type { HomeAwayCard } from '../../data/types';
@@ -179,11 +179,61 @@ export class HomeAwayCardScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    // Correct / Wrong buttons
+    const referee = getState().config.hasReferee ? getReferee() : null;
+    if (referee) {
+      createPanel(this, cx, 560, 410, 118, COLORS.crimson, 0.78);
+      createPill(this, cx, 518, 'REFEREE DECISION', HEX.crimson);
+      this.add
+        .text(cx, 548, `Pass the phone to ${referee.name}.`, {
+          fontSize: '18px',
+          fontFamily: FONT.title,
+          color: HEX.white,
+        })
+        .setOrigin(0.5);
+      this.add
+        .text(cx, 578, 'The referee awards the points after hearing the answer.', {
+          fontSize: '11px',
+          fontFamily: FONT.body,
+          color: HEX.textMuted,
+        })
+        .setOrigin(0.5);
+      createButton(this, cx, 620, '🟨 REF READY', () => this.showRefereeDecision(points, referee.name), {
+        fontSize: '18px',
+        paddingX: 18,
+        paddingY: 8,
+      });
+      return;
+    }
+
+    this.showJudgementButtons(points);
+  }
+
+  private showRefereeDecision(points: number, refereeName: string): void {
+    const cx = this.scale.width / 2;
+    createPanel(this, cx, 690, 410, 118, COLORS.gold, 0.82);
+    this.add
+      .text(cx, 654, `${refereeName}, make the call.`, {
+        fontSize: '18px',
+        fontFamily: FONT.title,
+        color: HEX.gold,
+      })
+      .setOrigin(0.5);
+    this.add
+      .text(cx, 680, 'Was the answer good enough for the chosen side?', {
+        fontSize: '11px',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
+      })
+      .setOrigin(0.5);
+    this.showJudgementButtons(points, 710);
+  }
+
+  private showJudgementButtons(points: number, y = 560): void {
+    const cx = this.scale.width / 2;
     const player = getCurrentPlayer();
 
     let buttonsHandled = false;
-    const correctBtn = createButton(this, cx - 80, 560, '✅ CORRECT', () => {
+    const correctBtn = createButton(this, cx - 80, y, '✅ CORRECT', () => {
       if (buttonsHandled) return;
       buttonsHandled = true;
       correctBtn.destroy();
@@ -195,7 +245,7 @@ export class HomeAwayCardScene extends Phaser.Scene {
       this.showNext();
     }, { fontSize: '18px', paddingX: 16, paddingY: 8, bgColor: HEX.green });
 
-    const wrongBtn = createButton(this, cx + 80, 560, '❌ WRONG', () => {
+    const wrongBtn = createButton(this, cx + 80, y, '❌ WRONG', () => {
       if (buttonsHandled) return;
       buttonsHandled = true;
       correctBtn.destroy();

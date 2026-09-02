@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { HEX, FONT, COLORS } from '../utils/theme';
-import { createButton, drawGrassBackground, slideIn, spawnConfetti } from '../utils/ui';
-import { getState, getStandings, getTeamScores, getMVP, resetState } from '../managers/GameState';
+import { createButton, createPanel, createPill, drawGrassBackground, slideIn, spawnConfetti } from '../utils/ui';
+import { getState, getStandings, getTeamScores, getMVP, getReferee, resetState } from '../managers/GameState';
 import { playWin, stopCrowdAmbience } from '../managers/SoundManager';
 
 export class FinalResultScene extends Phaser.Scene {
@@ -17,12 +17,14 @@ export class FinalResultScene extends Phaser.Scene {
     const gs = getState();
     const standings = getStandings();
     const mvp = getMVP();
+    const referee = getReferee();
 
     // Trophy + confetti
     stopCrowdAmbience();
     playWin();
     this.add.text(cx, 60, '🏆', { fontSize: '64px' }).setOrigin(0.5);
     this.time.delayedCall(300, () => spawnConfetti(this, cx, 60));
+    createPill(this, cx, 110, gs.config.questionPool === 'elite' ? 'ELITE MATCH COMPLETE' : 'ALL-STAR MATCH COMPLETE', gs.config.questionPool === 'elite' ? HEX.gold : HEX.cyan);
 
     // Winner
     if (standings.length > 0) {
@@ -54,6 +56,7 @@ export class FinalResultScene extends Phaser.Scene {
 
     // Standings table
     let y = 230;
+    createPanel(this, cx, y + 84, 430, Math.max(170, standings.length * 38 + 56), COLORS.gold, 0.72);
     this.add
       .text(cx, y, 'FINAL STANDINGS', {
         fontSize: '16px', fontFamily: FONT.title, color: HEX.gold,
@@ -107,10 +110,23 @@ export class FinalResultScene extends Phaser.Scene {
       y += 40;
     }
 
+    if (referee) {
+      this.add
+        .text(cx, y, `🟨 Referee: ${referee.name}`, {
+          fontSize: '14px',
+          fontFamily: FONT.body,
+          color: HEX.white,
+        })
+        .setOrigin(0.5);
+      y += 26;
+    }
+
     // Game summary
     this.add
-      .text(cx, y, `Cards played: ${gs.cardsPlayed}`, {
+      .text(cx, y, `Cards played: ${gs.cardsPlayed} • ${gs.config.playMode === 'teams' ? 'Team mode' : 'Solo rivals'} • ${gs.config.questionPool === 'elite' ? 'Elite pool' : 'Full pool'}`, {
         fontSize: '13px', fontFamily: FONT.body, color: HEX.textMuted,
+        wordWrap: { width: 410 },
+        align: 'center',
       })
       .setOrigin(0.5);
 

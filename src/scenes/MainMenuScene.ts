@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { HEX, FONT, COLORS } from '../utils/theme';
-import { createButton, drawGrassBackground, slideIn, getLang, setLang } from '../utils/ui';
+import { createButton, createPanel, createPill, drawGrassBackground, slideIn, getLang, setLang } from '../utils/ui';
 import { initAudio, playTap, startCrowdAmbience, isMuted, toggleMute, updateCrowdVolume } from '../managers/SoundManager';
 
 export class MainMenuScene extends Phaser.Scene {
@@ -18,17 +18,20 @@ export class MainMenuScene extends Phaser.Scene {
     drawGrassBackground(this);
     slideIn(this, 'up');
 
-    // Title
+    createPill(this, cx, 52, 'MATCHDAY EDITION', HEX.gold);
+
     this.add
-      .text(cx, 80, '⚽ KORAISTA', {
-        fontSize: '44px',
+      .text(cx, 95, '⚽ KORAISTA', {
+        fontSize: '48px',
         fontFamily: FONT.title,
-        color: HEX.crimson,
+        color: HEX.white,
+        stroke: HEX.crimson,
+        strokeThickness: 4,
       })
       .setOrigin(0.5);
 
     this.add
-      .text(cx, 135, 'All is fair in war, love… and football.', {
+      .text(cx, 148, 'All is fair in war, love… and football.', {
         fontSize: '13px',
         fontFamily: FONT.body,
         color: HEX.textMuted,
@@ -36,24 +39,40 @@ export class MainMenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    createPanel(this, cx, 208, 410, 62, COLORS.gold, 0.72);
+    this.add
+      .text(cx, 192, 'Sharper questions. Team rivalries. Referee drama.', {
+        fontSize: '16px',
+        fontFamily: FONT.title,
+        color: HEX.gold,
+      })
+      .setOrigin(0.5);
+    this.add
+      .text(cx, 220, 'Build a premium local match with elite trivia and social chaos.', {
+        fontSize: '11px',
+        fontFamily: FONT.body,
+        color: HEX.white,
+      })
+      .setOrigin(0.5);
+
     // Edition cards
-    const kickoffY = 220;
+    const kickoffY = 325;
     this.drawEditionCard(cx, kickoffY, 'THE KICKOFF', 'النسخة الأولى', ['RANK', 'HEADLINE', 'HOME/AWAY'], () => {
       this.scene.start('LobbyScene', { editions: ['kickoff'] });
     });
 
-    const secondY = 380;
+    const secondY = 485;
     this.drawEditionCard(cx, secondY, 'THE SECOND HALF', 'النسخة التانية', ['FLASHBACK', 'VAR', 'PENALTY'], () => {
       this.scene.start('LobbyScene', { editions: ['secondhalf'] });
     });
 
     // Mix mode
-    createButton(this, cx, 530, '🔥  MIX MODE', () => {
+    createButton(this, cx, 642, '🔥  MIX MODE', () => {
       this.scene.start('LobbyScene', { editions: ['kickoff', 'secondhalf'] });
     }, { fontSize: '22px', paddingX: 24, paddingY: 10 });
 
     this.add
-      .text(cx, 570, 'All card types combined!', {
+      .text(cx, 680, 'All card types combined!', {
         fontSize: '12px',
         fontFamily: FONT.body,
         color: HEX.textMuted,
@@ -62,7 +81,7 @@ export class MainMenuScene extends Phaser.Scene {
 
     // Penalty Shootout (legacy mode)
     const penaltyBtn = this.add
-      .text(cx, 630, '⚽ PENALTY SHOOTOUT', {
+      .text(cx, 730, '⚽ PENALTY SHOOTOUT', {
         fontSize: '18px',
         fontFamily: FONT.body,
         color: HEX.cyan,
@@ -126,24 +145,24 @@ export class MainMenuScene extends Phaser.Scene {
     onClick: () => void,
   ): void {
     const w = 360;
-    const h = 120;
+    const h = 132;
 
     // Card background
-    const bg = this.add.rectangle(x, y, w, h, COLORS.darkNavy, 0.8).setInteractive({ useHandCursor: true });
+    const bg = createPanel(this, x, y, w, h, COLORS.crimson, 0.82).setInteractive({ useHandCursor: true });
     const border = this.add.graphics();
     border.lineStyle(2, COLORS.crimson, 0.5);
     border.strokeRoundedRect(x - w / 2, y - h / 2, w, h, 12);
 
     this.add
-      .text(x, y - 30, title, {
+      .text(x, y - 38, title, {
         fontSize: '22px',
         fontFamily: FONT.title,
-        color: HEX.crimson,
+        color: HEX.white,
       })
       .setOrigin(0.5);
 
     this.add
-      .text(x, y - 5, subtitle, {
+      .text(x, y - 8, subtitle, {
         fontSize: '14px',
         fontFamily: FONT.body,
         color: HEX.textMuted,
@@ -151,12 +170,14 @@ export class MainMenuScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(x, y + 25, modes.join('  •  '), {
+      .text(x, y + 24, modes.join('  •  '), {
         fontSize: '11px',
         fontFamily: FONT.body,
         color: HEX.gold,
       })
       .setOrigin(0.5);
+
+    createPill(this, x, y + 47, 'ELITE LOBBY READY', HEX.cyan);
 
     bg.on('pointerover', () => {
       border.clear();

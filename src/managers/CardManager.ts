@@ -1,4 +1,5 @@
-import type { Card, CardType, Edition } from '../data/types';
+import type { Card, CardType, Difficulty, Edition } from '../data/types';
+import type { QuestionPool } from './GameState';
 import { rankCards } from '../data/rankCards';
 import { headlineCards } from '../data/headlineCards';
 import { homeAwayCards } from '../data/homeAwayCards';
@@ -26,11 +27,11 @@ export class CardManager {
   };
   private usedIds = new Set<string>();
 
-  constructor(editions?: Edition[]) {
-    this.buildDecks(editions);
+  constructor(editions?: Edition[], questionPool: QuestionPool = 'all') {
+    this.buildDecks(editions, questionPool);
   }
 
-  private buildDecks(editions?: Edition[]): void {
+  private buildDecks(editions?: Edition[], questionPool: QuestionPool = 'all'): void {
     const all: Card[] = [
       ...rankCards,
       ...headlineCards,
@@ -40,9 +41,14 @@ export class CardManager {
       ...penaltyCards,
     ];
 
-    const filtered = editions
+    const allowedDifficulties: Difficulty[] = questionPool === 'elite'
+      ? ['away']
+      : ['home', 'away'];
+
+    const filtered = (editions
       ? all.filter((c) => editions.includes(c.edition))
-      : all;
+      : all)
+      .filter((card) => allowedDifficulties.includes(card.difficulty));
 
     // Reset decks
     for (const key of Object.keys(this.decks) as CardType[]) {
@@ -93,8 +99,8 @@ export class CardManager {
   }
 
   /** Reset used cards and reshuffle */
-  reset(editions?: Edition[]): void {
+  reset(editions?: Edition[], questionPool: QuestionPool = 'all'): void {
     this.usedIds.clear();
-    this.buildDecks(editions);
+    this.buildDecks(editions, questionPool);
   }
 }

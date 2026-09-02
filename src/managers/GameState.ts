@@ -2,6 +2,7 @@ import type { CardType, Edition } from '../data/types';
 
 export type PlayMode = 'solo' | 'teams';
 export type WinCondition = 'cards' | 'timed' | 'points';
+export type QuestionPool = 'all' | 'elite';
 
 export interface PlayerStats {
   correct: number;
@@ -30,6 +31,7 @@ export interface Team {
 export interface GameConfig {
   playMode: PlayMode;
   hasReferee: boolean;
+  questionPool: QuestionPool;
   winCondition: WinCondition;
   /** For 'cards' mode: how many cards to play */
   maxCards: number;
@@ -65,6 +67,7 @@ export function createDefaultConfig(): GameConfig {
   return {
     playMode: 'solo',
     hasReferee: false,
+    questionPool: 'elite',
     winCondition: 'cards',
     maxCards: 20,
     maxTime: 300,
@@ -150,6 +153,11 @@ export function loadState(): GameState | null {
 export function getCurrentPlayer(): Player {
   const gs = getState();
   return gs.players[gs.currentPlayerIndex];
+}
+
+export function getReferee(): Player | null {
+  const gs = getState();
+  return gs.players.find((player) => player.isReferee) ?? null;
 }
 
 /** Advance to next player (skipping referee) */

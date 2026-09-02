@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { HEX, FONT, COLORS } from '../../utils/theme';
-import { createButton, drawGrassBackground, drawHeaderBar, slideIn, scorePopAnimation, spawnConfetti, t } from '../../utils/ui';
+import { createButton, createPill, drawGrassBackground, drawHeaderBar, slideIn, scorePopAnimation, spawnConfetti, t } from '../../utils/ui';
 import { getCurrentPlayer, awardPoints, advancePlayer, isGameOver } from '../../managers/GameState';
 import { getCardManager } from '../GameplayScene';
 import { playCorrect, playWrong } from '../../managers/SoundManager';
@@ -54,6 +54,7 @@ export class RankCardScene extends Phaser.Scene {
         color: HEX.gold,
       })
       .setOrigin(0.5);
+    createPill(this, cx, 70, 'NO FREE HINTS', HEX.crimson);
 
     // Question
     this.add
@@ -121,7 +122,7 @@ export class RankCardScene extends Phaser.Scene {
 
       // Item text
       const txt = this.add
-        .text(cx, y, t(item), {
+        .text(cx, y, this.getDisplayItemText(t(item)), {
           fontSize: '14px',
           fontFamily: FONT.body,
           color: HEX.white,
@@ -175,6 +176,7 @@ export class RankCardScene extends Phaser.Scene {
     this.add
       .text(cx, 45, player.name, { fontSize: '14px', fontFamily: FONT.body, color: HEX.gold })
       .setOrigin(0.5);
+    createPill(this, cx, 70, 'NO FREE HINTS', HEX.crimson);
     this.add
       .text(cx, 90, t(this.card.question), {
         fontSize: '16px', fontFamily: FONT.body, color: HEX.white,
@@ -257,5 +259,13 @@ export class RankCardScene extends Phaser.Scene {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
+  }
+
+  private getDisplayItemText(value: string): string {
+    return value
+      .replace(/\s*\([^)]*\)\s*/g, ' ')
+      .replace(/\s*[–-]\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|June|July|August|September|October|November|December|يناير|فبراير|مارس|أبريل|ابريل|مايو|يونيو|يوليو|أغسطس|اغسطس|سبتمبر|أكتوبر|اكتوبر|نوفمبر|ديسمبر).*/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 }

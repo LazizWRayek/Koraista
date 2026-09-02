@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import { HEX, FONT, COLORS, TEAM_COLORS } from '../utils/theme';
-import { createButton, drawGrassBackground, slideIn, drawHeaderBar } from '../utils/ui';
+import { createButton, createPanel, createPill, drawGrassBackground, slideIn, drawHeaderBar } from '../utils/ui';
 import {
   createPlayer,
   initGame,
   createDefaultConfig,
   type PlayMode,
+  type QuestionPool,
   type WinCondition,
   type Player,
   type Team,
@@ -17,6 +18,7 @@ interface LobbyData {
   editions: Edition[];
   playerNames?: string[];
   playMode?: PlayMode;
+  questionPool?: QuestionPool;
   winCondition?: WinCondition;
   hasReferee?: boolean;
   maxCards?: number;
@@ -26,6 +28,7 @@ interface LobbyData {
 
 export class LobbyScene extends Phaser.Scene {
   private playMode: PlayMode = 'solo';
+  private questionPool: QuestionPool = 'elite';
   private winCondition: WinCondition = 'cards';
   private playerNames: string[] = ['Player 1', 'Player 2'];
   private hasReferee = false;
@@ -43,6 +46,7 @@ export class LobbyScene extends Phaser.Scene {
       editions: this.editions,
       playerNames: [...this.playerNames],
       playMode: this.playMode,
+      questionPool: this.questionPool,
       winCondition: this.winCondition,
       hasReferee: this.hasReferee,
       maxCards: this.maxCards,
@@ -55,6 +59,7 @@ export class LobbyScene extends Phaser.Scene {
     if (data?.editions) this.editions = data.editions;
     if (data?.playerNames) this.playerNames = data.playerNames;
     if (data?.playMode) this.playMode = data.playMode;
+    if (data?.questionPool) this.questionPool = data.questionPool;
     if (data?.winCondition) this.winCondition = data.winCondition;
     if (data?.hasReferee !== undefined) this.hasReferee = data.hasReferee;
     if (data?.maxCards !== undefined) this.maxCards = data.maxCards;
@@ -91,9 +96,27 @@ export class LobbyScene extends Phaser.Scene {
   }
 
   private drawFullUI(): void {
-    // Remove all except persistent elements (first 3: grass, header, back btn, title)
     const cx = this.scale.width / 2;
-    let y = 80;
+    let y = 92;
+
+    createPanel(this, cx, y + 30, 420, 86, COLORS.gold, 0.76);
+    this.add
+      .text(cx, y + 8, 'Build your dream matchday', {
+        fontSize: '20px',
+        fontFamily: FONT.title,
+        color: HEX.white,
+      })
+      .setOrigin(0.5);
+    this.add
+      .text(cx, y + 34, 'Pick the format, crank up the difficulty, then let the ref keep everyone honest.', {
+        fontSize: '11px',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
+        wordWrap: { width: 380 },
+        align: 'center',
+      })
+      .setOrigin(0.5);
+    y += 90;
 
     // Play mode toggle
     this.addSectionLabel(cx, y, 'MODE');
@@ -102,8 +125,10 @@ export class LobbyScene extends Phaser.Scene {
       this.playMode = idx === 0 ? 'solo' : 'teams';
     });
 
+    createPill(this, cx, y + 34, this.playMode === 'solo' ? 'LOCAL RIVALS' : 'TEAM DERBY', this.playMode === 'solo' ? HEX.cyan : HEX.gold);
+
     // Player management
-    y += 50;
+    y += 62;
     this.addSectionLabel(cx, y, 'PLAYERS');
     y += 15;
     this.add
@@ -119,7 +144,7 @@ export class LobbyScene extends Phaser.Scene {
     for (let i = 0; i < this.playerNames.length; i++) {
       const playerY = y + i * 35;
       const label = this.add
-        .text(cx - 80, playerY, `${i + 1}. ${this.playerNames[i]}`, {
+        .text(cx - 90, playerY, `${i + 1}. ${this.playerNames[i]}${this.hasReferee && i === this.playerNames.length - 1 ? '  🟨 REF' : ''}`, {
           fontSize: '16px',
           fontFamily: FONT.body,
           color: HEX.white,
@@ -184,9 +209,34 @@ export class LobbyScene extends Phaser.Scene {
     this.addToggle(cx, y, ['NO', 'YES'], this.hasReferee ? 1 : 0, (idx) => {
       this.hasReferee = idx === 1;
     });
+    this.add
+      .text(cx, y + 28, this.hasReferee
+        ? 'Last player becomes the local referee for judgment calls.'
+        : 'Turn this on to add a neutral ref for reveal-and-judge rounds.', {
+        fontSize: '11px',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
+      })
+      .setOrigin(0.5);
+
+    y += 56;
+    this.addSectionLabel(cx, y, 'QUESTION POOL');
+    y += 30;
+    this.addToggle(cx, y, ['ALL-STAR', 'ELITE'], this.questionPool === 'all' ? 0 : 1, (idx) => {
+      this.questionPool = idx === 0 ? 'all' : 'elite';
+    });
+    this.add
+      .text(cx, y + 28, this.questionPool === 'elite'
+        ? 'Elite favors the hard side of the card decks.'
+        : 'All-Star mixes the full party-friendly card set.', {
+        fontSize: '11px',
+        fontFamily: FONT.body,
+        color: this.questionPool === 'elite' ? HEX.gold : HEX.textMuted,
+      })
+      .setOrigin(0.5);
 
     // Win condition
-    y += 50;
+    y += 58;
     this.addSectionLabel(cx, y, 'WIN CONDITION');
     y += 30;
     const wcLabels = ['CARDS', 'TIMED', 'POINTS'];
@@ -257,6 +307,34 @@ export class LobbyScene extends Phaser.Scene {
 
     // Start button
     y += 70;
+    createPanel(this, cx, y - 18, 420, 74, COLORS.cyan, 0.74);
+    this.add
+      .text(cx, y - 34, 'MATCH BRIEF', {
+        fontSize: '12px',
+        fontFamily: FONT.title,
+        color: HEX.cyan,
+      })
+      .setOrigin(0.5);
+    this.add
+      .text(cx, y - 10, `${this.playMode === 'solo' ? 'Solo rivals' : 'Two-team showdown'} • ${this.playerNames.length - (this.hasReferee ? 1 : 0)} active players • ${this.questionPool === 'elite' ? 'Elite' : 'All-Star'} pool`, {
+        fontSize: '12px',
+        fontFamily: FONT.body,
+        color: HEX.white,
+        wordWrap: { width: 390 },
+        align: 'center',
+      })
+      .setOrigin(0.5);
+    this.add
+      .text(cx, y + 14, `${this.winCondition === 'cards' ? `${this.maxCards} cards` : this.winCondition === 'timed' ? `${Math.floor(this.maxTime / 60)} minute clock` : `Race to ${this.targetScore} points`} • ${this.hasReferee ? 'Referee active' : 'Self-officiated'}`, {
+        fontSize: '11px',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
+        wordWrap: { width: 390 },
+        align: 'center',
+      })
+      .setOrigin(0.5);
+
+    y += 78;
     createButton(this, cx, y, '▶  START GAME', () => this.startGame(), {
       fontSize: '28px',
       paddingX: 36,
@@ -269,6 +347,7 @@ export class LobbyScene extends Phaser.Scene {
       ...createDefaultConfig(),
       playMode: this.playMode,
       hasReferee: this.hasReferee,
+      questionPool: this.questionPool,
       winCondition: this.winCondition,
       maxCards: this.maxCards,
       maxTime: this.maxTime,

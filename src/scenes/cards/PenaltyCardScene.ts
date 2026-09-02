@@ -10,6 +10,13 @@ export class PenaltyCardScene extends Phaser.Scene {
   private card!: PenaltyCard;
   private bet = 0;
   private answered = false;
+  private optionBgs: Phaser.GameObjects.Rectangle[] = [];
+  private optionBorders: Phaser.GameObjects.Graphics[] = [];
+  private optionWidth = 400;
+  private optionHeight = 60;
+  private optionCenterX = 0;
+  private optionStartY = 220;
+  private optionGap = 12;
 
   constructor() {
     super({ key: 'PenaltyCardScene' });
@@ -110,6 +117,7 @@ export class PenaltyCardScene extends Phaser.Scene {
     drawHeaderBar(this);
 
     const cx = this.scale.width / 2;
+    this.optionCenterX = cx;
     const player = getCurrentPlayer();
 
     this.add
@@ -131,25 +139,26 @@ export class PenaltyCardScene extends Phaser.Scene {
 
     // Options
     const optionLabels = ['A', 'B', 'C', 'D'];
-    const startY = 220;
-    const optH = 60;
-    const optW = 400;
+    this.optionBgs = [];
+    this.optionBorders = [];
 
     this.card.options.forEach((opt, i) => {
-      const y = startY + i * (optH + 12);
-      const bg = this.add.rectangle(cx, y, optW, optH, COLORS.darkNavy, 0.8).setInteractive({ useHandCursor: true });
+      const y = this.optionStartY + i * (this.optionHeight + this.optionGap);
+      const bg = this.add.rectangle(cx, y, this.optionWidth, this.optionHeight, COLORS.darkNavy, 0.8).setInteractive({ useHandCursor: true });
       const border = this.add.graphics();
       border.lineStyle(1, COLORS.textDark, 0.4);
-      border.strokeRoundedRect(cx - optW / 2, y - optH / 2, optW, optH, 6);
+      border.strokeRoundedRect(cx - this.optionWidth / 2, y - this.optionHeight / 2, this.optionWidth, this.optionHeight, 6);
+      this.optionBgs.push(bg);
+      this.optionBorders.push(border);
 
-      this.add.text(cx - optW / 2 + 20, y, optionLabels[i], { fontSize: '18px', fontFamily: FONT.title, color: '#ff9f43' }).setOrigin(0, 0.5);
-      this.add.text(cx, y, t(opt), { fontSize: '14px', fontFamily: FONT.body, color: HEX.white, wordWrap: { width: optW - 60 }, align: 'center' }).setOrigin(0.5);
+      this.add.text(cx - this.optionWidth / 2 + 20, y, optionLabels[i], { fontSize: '18px', fontFamily: FONT.title, color: '#ff9f43' }).setOrigin(0, 0.5);
+      this.add.text(cx, y, t(opt), { fontSize: '14px', fontFamily: FONT.body, color: HEX.white, wordWrap: { width: this.optionWidth - 60 }, align: 'center' }).setOrigin(0.5);
 
       bg.on('pointerover', () => {
-        if (!this.answered) { border.clear(); border.lineStyle(2, COLORS.gold, 0.8); border.strokeRoundedRect(cx - optW / 2, y - optH / 2, optW, optH, 6); }
+        if (!this.answered) { border.clear(); border.lineStyle(2, COLORS.gold, 0.8); border.strokeRoundedRect(cx - this.optionWidth / 2, y - this.optionHeight / 2, this.optionWidth, this.optionHeight, 6); }
       });
       bg.on('pointerout', () => {
-        if (!this.answered) { border.clear(); border.lineStyle(1, COLORS.textDark, 0.4); border.strokeRoundedRect(cx - optW / 2, y - optH / 2, optW, optH, 6); }
+        if (!this.answered) { border.clear(); border.lineStyle(1, COLORS.textDark, 0.4); border.strokeRoundedRect(cx - this.optionWidth / 2, y - this.optionHeight / 2, this.optionWidth, this.optionHeight, 6); }
       });
       bg.on('pointerdown', () => {
         if (this.answered) return;
@@ -157,7 +166,7 @@ export class PenaltyCardScene extends Phaser.Scene {
 
         const correct = i === this.card.answerIndex;
         const color = correct ? COLORS.green : COLORS.crimson;
-        border.clear(); border.lineStyle(3, color, 1); border.strokeRoundedRect(cx - optW / 2, y - optH / 2, optW, optH, 6);
+        border.clear(); border.lineStyle(3, color, 1); border.strokeRoundedRect(cx - this.optionWidth / 2, y - this.optionHeight / 2, this.optionWidth, this.optionHeight, 6);
         bg.setFillStyle(color, 0.3);
 
         this.showResult(correct);
@@ -195,6 +204,7 @@ export class PenaltyCardScene extends Phaser.Scene {
       if (this.bet > 0) {
         scorePopAnimation(this, cx, 480, `-${this.bet}`);
       }
+      this.highlightCorrectOption();
     }
 
     const resultText = correct ? 'GOAL! ⚽🎉' : 'SAVED! 🧤';
@@ -215,5 +225,34 @@ export class PenaltyCardScene extends Phaser.Scene {
     createButton(this, cx, 810, isGameOver() ? 'SEE RESULTS' : 'NEXT', () => {
       this.scene.start(isGameOver() ? 'FinalResultScene' : 'GameplayScene');
     }, { fontSize: '22px', paddingX: 24, paddingY: 10 });
+  }
+
+  private highlightCorrectOption(): void {
+    const answerIndex = this.card.answerIndex;
+    const correctBorder = this.optionBorders[answerIndex];
+    const correctBg = this.optionBgs[answerIndex];
+    const correctY = this.optionStartY + answerIndex * (this.optionHeight + this.optionGap);
+    const label = ['A', 'B', 'C', 'D'][answerIndex];
+
+    if (correctBorder && correctBg) {
+      correctBorder.clear();
+      correctBorder.lineStyle(3, COLORS.green, 1);
+      correctBorder.strokeRoundedRect(
+        this.optionCenterX - this.optionWidth / 2,
+        correctY - this.optionHeight / 2,
+        this.optionWidth,
+        this.optionHeight,
+        6,
+      );
+      correctBg.setFillStyle(COLORS.green, 0.18);
+    }
+
+    this.add
+      .text(this.optionCenterX, 690, `Correct answer: ${label}`, {
+        fontSize: '14px',
+        fontFamily: FONT.title,
+        color: HEX.green,
+      })
+      .setOrigin(0.5);
   }
 }

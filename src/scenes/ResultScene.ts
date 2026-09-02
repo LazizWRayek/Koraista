@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { getState, resetState } from '../GameState';
+import { HEX, FONT, COLORS } from '../utils/theme';
+import { createButton, createPanel, createPill, drawGrassBackground, slideIn, spawnConfetti } from '../utils/ui';
 
 export class ResultScene extends Phaser.Scene {
   constructor() {
@@ -11,61 +13,59 @@ export class ResultScene extends Phaser.Scene {
     const gs = getState();
     const p1 = gs.players[0];
     const p2 = gs.players[1];
+    drawGrassBackground(this);
+    slideIn(this, 'up');
 
     const winner =
       p1.score > p2.score ? p1.name : p2.score > p1.score ? p2.name : null;
 
+    if (winner) {
+      this.time.delayedCall(250, () => spawnConfetti(this, cx, 110));
+    }
+
     // Trophy / Draw
     this.add
-      .text(cx, 120, winner ? '🏆' : '🤝', { fontSize: '72px' })
+      .text(cx, 105, winner ? '🏆' : '🤝', { fontSize: '72px' })
       .setOrigin(0.5);
+    createPill(this, cx, 170, winner ? 'SHOOTOUT CHAMPION' : 'LEVEL SCORE', winner ? HEX.gold : HEX.cyan);
 
+    createPanel(this, cx, 315, 420, 180, winner ? COLORS.gold : COLORS.cyan, 0.78);
     this.add
-      .text(cx, 220, winner ? `${winner} WINS!` : "IT'S A DRAW!", {
+      .text(cx, 240, winner ? `${winner} WINS!` : "IT'S A DRAW!", {
         fontSize: '36px',
-        fontFamily: 'Arial Black, sans-serif',
-        color: '#e94560',
+        fontFamily: FONT.title,
+        color: winner ? HEX.crimson : HEX.cyan,
       })
       .setOrigin(0.5);
 
     this.add
-      .text(cx, 290, `${p1.name}  ${p1.score} – ${p2.score}  ${p2.name}`, {
+      .text(cx, 302, `${p1.name}  ${p1.score} – ${p2.score}  ${p2.name}`, {
         fontSize: '22px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#ffffff',
+        fontFamily: FONT.body,
+        color: HEX.white,
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(cx, 350, winner ? `${winner} owned the box under pressure.` : 'Nothing separated the keepers or the finishers.', {
+        fontSize: '13px',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
+        wordWrap: { width: 360 },
+        align: 'center',
       })
       .setOrigin(0.5);
 
     // Replay
-    const btn = this.add
-      .text(cx, 400, '🔄  PLAY AGAIN', {
-        fontSize: '26px',
-        fontFamily: 'Arial Black, sans-serif',
-        color: '#0f3460',
-        backgroundColor: '#e94560',
-        padding: { x: 28, y: 14 },
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-
-    btn.on('pointerdown', () => {
+    createButton(this, cx, 445, '🔄  PLAY AGAIN', () => {
       resetState();
       this.scene.start('MenuScene');
-    });
+    }, { fontSize: '24px', paddingX: 24, paddingY: 10 });
 
     // Menu
-    const menuBtn = this.add
-      .text(cx, 480, 'MAIN MENU', {
-        fontSize: '18px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#a0a0c0',
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-
-    menuBtn.on('pointerdown', () => {
+    createButton(this, cx, 515, 'MAIN MENU', () => {
       resetState();
       this.scene.start('MainMenuScene');
-    });
+    }, { fontSize: '18px', paddingX: 20, paddingY: 8, bgColor: '#333355', textColor: HEX.white });
   }
 }

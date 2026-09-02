@@ -9,6 +9,13 @@ import type { HeadlineCard } from '../../data/types';
 export class HeadlineCardScene extends Phaser.Scene {
   private card!: HeadlineCard;
   private answered = false;
+  private optionBgs: Phaser.GameObjects.Rectangle[] = [];
+  private optionBorders: Phaser.GameObjects.Graphics[] = [];
+  private optionWidth = 400;
+  private optionHeight = 55;
+  private optionCenterX = 0;
+  private optionStartY = 270;
+  private optionGap = 10;
 
   constructor() {
     super({ key: 'HeadlineCardScene' });
@@ -28,6 +35,7 @@ export class HeadlineCardScene extends Phaser.Scene {
     slideIn(this, 'right');
 
     const cx = this.scale.width / 2;
+    this.optionCenterX = cx;
     const player = getCurrentPlayer();
 
     // Header
@@ -68,23 +76,24 @@ export class HeadlineCardScene extends Phaser.Scene {
 
     // Options (A/B/C/D)
     const optionLabels = ['A', 'B', 'C', 'D'];
-    const startY = 270;
-    const optH = 55;
-    const optW = 400;
+    this.optionBgs = [];
+    this.optionBorders = [];
 
     this.card.options.forEach((opt, i) => {
-      const y = startY + i * (optH + 10);
+      const y = this.optionStartY + i * (this.optionHeight + this.optionGap);
 
       const bg = this.add
-        .rectangle(cx, y, optW, optH, COLORS.darkNavy, 0.8)
+        .rectangle(cx, y, this.optionWidth, this.optionHeight, COLORS.darkNavy, 0.8)
         .setInteractive({ useHandCursor: true });
 
       const border = this.add.graphics();
       border.lineStyle(1, COLORS.textDark, 0.4);
-      border.strokeRoundedRect(cx - optW / 2, y - optH / 2, optW, optH, 6);
+      border.strokeRoundedRect(cx - this.optionWidth / 2, y - this.optionHeight / 2, this.optionWidth, this.optionHeight, 6);
+      this.optionBgs.push(bg);
+      this.optionBorders.push(border);
 
       this.add
-        .text(cx - optW / 2 + 20, y, optionLabels[i], {
+        .text(cx - this.optionWidth / 2 + 20, y, optionLabels[i], {
           fontSize: '18px',
           fontFamily: FONT.title,
           color: HEX.cyan,
@@ -96,7 +105,7 @@ export class HeadlineCardScene extends Phaser.Scene {
           fontSize: '14px',
           fontFamily: FONT.body,
           color: HEX.white,
-          wordWrap: { width: optW - 60 },
+          wordWrap: { width: this.optionWidth - 60 },
           align: 'center',
         })
         .setOrigin(0.5);
@@ -105,17 +114,17 @@ export class HeadlineCardScene extends Phaser.Scene {
         if (!this.answered) {
           border.clear();
           border.lineStyle(2, COLORS.gold, 0.8);
-          border.strokeRoundedRect(cx - optW / 2, y - optH / 2, optW, optH, 6);
+          border.strokeRoundedRect(cx - this.optionWidth / 2, y - this.optionHeight / 2, this.optionWidth, this.optionHeight, 6);
         }
       });
       bg.on('pointerout', () => {
         if (!this.answered) {
           border.clear();
           border.lineStyle(1, COLORS.textDark, 0.4);
-          border.strokeRoundedRect(cx - optW / 2, y - optH / 2, optW, optH, 6);
+          border.strokeRoundedRect(cx - this.optionWidth / 2, y - this.optionHeight / 2, this.optionWidth, this.optionHeight, 6);
         }
       });
-      bg.on('pointerdown', () => this.selectAnswer(i, bg, border, y, optW, optH));
+      bg.on('pointerdown', () => this.selectAnswer(i, bg, border, y));
     });
   }
 
@@ -124,8 +133,6 @@ export class HeadlineCardScene extends Phaser.Scene {
     bg: Phaser.GameObjects.Rectangle,
     border: Phaser.GameObjects.Graphics,
     y: number,
-    optW: number,
-    optH: number,
   ): void {
     if (this.answered) return;
     this.answered = true;
@@ -138,7 +145,7 @@ export class HeadlineCardScene extends Phaser.Scene {
     const color = correct ? COLORS.green : COLORS.crimson;
     border.clear();
     border.lineStyle(3, color, 1);
-    border.strokeRoundedRect(cx - optW / 2, y - optH / 2, optW, optH, 6);
+    border.strokeRoundedRect(cx - this.optionWidth / 2, y - this.optionHeight / 2, this.optionWidth, this.optionHeight, 6);
     bg.setFillStyle(color, 0.3);
 
     if (correct) {
@@ -149,6 +156,7 @@ export class HeadlineCardScene extends Phaser.Scene {
     } else {
       playWrong();
       awardPoints(player.id, 0, 'headline', false);
+      this.highlightCorrectOption();
     }
 
     // Show correct answer if wrong
@@ -161,7 +169,7 @@ export class HeadlineCardScene extends Phaser.Scene {
 
     if (this.card.explanation) {
       this.add
-        .text(cx, 695, t(this.card.explanation), {
+        .text(cx, 705, t(this.card.explanation), {
           fontSize: '12px', fontFamily: FONT.body, color: HEX.textMuted,
           wordWrap: { width: 400 }, align: 'center',
         })
@@ -173,5 +181,34 @@ export class HeadlineCardScene extends Phaser.Scene {
     createButton(this, cx, 760, nextLabel, () => {
       this.scene.start(isGameOver() ? 'FinalResultScene' : 'GameplayScene');
     }, { fontSize: '22px', paddingX: 24, paddingY: 10 });
+  }
+
+  private highlightCorrectOption(): void {
+    const answerIndex = this.card.answerIndex;
+    const correctBorder = this.optionBorders[answerIndex];
+    const correctBg = this.optionBgs[answerIndex];
+    const correctY = this.optionStartY + answerIndex * (this.optionHeight + this.optionGap);
+    const label = ['A', 'B', 'C', 'D'][answerIndex];
+
+    if (correctBorder && correctBg) {
+      correctBorder.clear();
+      correctBorder.lineStyle(3, COLORS.green, 1);
+      correctBorder.strokeRoundedRect(
+        this.optionCenterX - this.optionWidth / 2,
+        correctY - this.optionHeight / 2,
+        this.optionWidth,
+        this.optionHeight,
+        6,
+      );
+      correctBg.setFillStyle(COLORS.green, 0.18);
+    }
+
+    this.add
+      .text(this.optionCenterX, 680, `Correct answer: ${label}`, {
+        fontSize: '14px',
+        fontFamily: FONT.title,
+        color: HEX.green,
+      })
+      .setOrigin(0.5);
   }
 }

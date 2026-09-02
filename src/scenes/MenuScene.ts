@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { initGame } from '../GameState';
+import { HEX, FONT, COLORS } from '../utils/theme';
+import { createButton, createPanel, createPill, drawGrassBackground, slideIn } from '../utils/ui';
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -7,23 +9,27 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create(): void {
-    const cx = +this.scale.width / 2;
-    const cy = +this.scale.height / 2;
+    const cx = this.scale.width / 2;
+    const cy = this.scale.height / 2;
+    drawGrassBackground(this);
+    slideIn(this, 'right');
 
-    // Title
+    createPill(this, cx, 60, 'CLASSIC SHOOTOUT', HEX.cyan);
     this.add
-      .text(cx, 120, '⚽ KORAISTA', {
+      .text(cx, 110, '⚽ KORAISTA', {
         fontSize: '48px',
-        fontFamily: 'Arial Black, sans-serif',
-        color: '#e94560',
+        fontFamily: FONT.title,
+        color: HEX.white,
+        stroke: HEX.crimson,
+        strokeThickness: 4,
       })
       .setOrigin(0.5);
 
     this.add
-      .text(cx, 180, 'All is fair in war, love… and football.', {
+      .text(cx, 155, 'All is fair in war, love… and football.', {
         fontSize: '16px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#a0a0c0',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
         fontStyle: 'italic',
       })
       .setOrigin(0.5);
@@ -32,60 +38,52 @@ export class MenuScene extends Phaser.Scene {
     const p1Name = 'Player 1';
     const p2Name = 'Player 2';
 
-    // Mode selector
+    createPanel(this, cx, cy - 10, 420, 220, COLORS.cyan, 0.78);
     this.add
-      .text(cx, cy - 40, 'PENALTY SHOOTOUT', {
-        fontSize: '22px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#ffffff',
+      .text(cx, cy - 70, 'PENALTY SHOOTOUT', {
+        fontSize: '26px',
+        fontFamily: FONT.title,
+        color: HEX.white,
       })
       .setOrigin(0.5);
 
     this.add
-      .text(cx, cy, 'Best of 5 · Pass & Play', {
+      .text(cx, cy - 30, 'Best of 5 · Pass & Play', {
         fontSize: '14px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#a0a0c0',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(cx, cy + 8, 'Read the kick. Pick the corner. Win the mind game.', {
+        fontSize: '16px',
+        fontFamily: FONT.title,
+        color: HEX.cyan,
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(cx, cy + 44, 'A fast local duel for two players when you want pure penalty-box drama.', {
+        fontSize: '12px',
+        fontFamily: FONT.body,
+        color: HEX.white,
+        wordWrap: { width: 360 },
+        align: 'center',
       })
       .setOrigin(0.5);
 
     // Play button
-    const btn = this.add
-      .text(cx, cy + 80, '▶  PLAY', {
-        fontSize: '32px',
-        fontFamily: 'Arial Black, sans-serif',
-        color: '#0f3460',
-        backgroundColor: '#e94560',
-        padding: { x: 32, y: 16 },
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-
-    btn.on('pointerover', () => btn.setStyle({ color: '#ffffff' }));
-    btn.on('pointerout', () => btn.setStyle({ color: '#0f3460' }));
-    btn.on('pointerdown', () => {
+    createButton(this, cx, cy + 125, '▶  PLAY', () => {
       initGame(p1Name, p2Name, 5);
       this.scene.start('PenaltyScene');
-    });
-
-    // Coming soon modes
-    const modes = ['RANK', 'HEADLINE', 'HOME / AWAY', 'FLASHBACK', 'VAR'];
-    modes.forEach((mode, i) => {
-      this.add
-        .text(cx, cy + 180 + i * 36, mode, {
-          fontSize: '16px',
-          fontFamily: 'Arial, sans-serif',
-          color: '#555580',
-        })
-        .setOrigin(0.5);
-    });
+    }, { fontSize: '28px', paddingX: 28, paddingY: 12 });
 
     this.add
-      .text(cx, cy + 180 + modes.length * 36 + 8, '(coming soon)', {
+      .text(cx, cy + 178, 'Two players • Shared screen • Instant rematch', {
         fontSize: '12px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#333355',
-        fontStyle: 'italic',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
       })
       .setOrigin(0.5);
   }

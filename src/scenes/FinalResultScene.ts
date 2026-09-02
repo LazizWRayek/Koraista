@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { HEX, FONT, COLORS } from '../utils/theme';
 import { createButton, createPanel, createPill, drawGrassBackground, slideIn, spawnConfetti } from '../utils/ui';
-import { getState, getStandings, getTeamScores, getMVP, getReferee, resetState } from '../managers/GameState';
+import { createRematch, getState, getStandings, getTeamScores, getMVP, getReferee, markScene, markSummaryRecorded, resetState } from '../managers/GameState';
+import { buildMatchHighlights, getPlayerBadges, getRecentMatches, recordMatch } from '../managers/ProfileManager';
 import { playWin, stopCrowdAmbience } from '../managers/SoundManager';
 
 export class FinalResultScene extends Phaser.Scene {
@@ -10,6 +11,7 @@ export class FinalResultScene extends Phaser.Scene {
   }
 
   create(): void {
+    markScene('FinalResultScene');
     drawGrassBackground(this);
     slideIn(this, 'up');
 
@@ -18,6 +20,12 @@ export class FinalResultScene extends Phaser.Scene {
     const standings = getStandings();
     const mvp = getMVP();
     const referee = getReferee();
+    if (!gs.summaryRecorded) {
+      recordMatch(gs.players);
+      markSummaryRecorded();
+    }
+    const highlights = buildMatchHighlights(gs.players);
+    const recentMatches = getRecentMatches(2);
 
     // Trophy + confetti
     stopCrowdAmbience();
@@ -90,6 +98,17 @@ export class FinalResultScene extends Phaser.Scene {
           fontSize: '10px', fontFamily: FONT.body, color: HEX.textMuted,
         })
         .setOrigin(0, 0.5);
+
+      const badges = getPlayerBadges(player);
+      if (badges.length) {
+        this.add
+          .text(this.scale.width - 40, y + i * 35 + 14, badges.join(' • '), {
+            fontSize: '9px',
+            fontFamily: FONT.body,
+            color: HEX.textMuted,
+          })
+          .setOrigin(1, 0.5);
+      }
     });
 
     y += standings.length * 35 + 30;
@@ -121,6 +140,39 @@ export class FinalResultScene extends Phaser.Scene {
       y += 26;
     }
 
+    if (highlights.length) {
+      this.add
+        .text(cx, y, 'MATCH HIGHLIGHTS', {
+          fontSize: '13px',
+          fontFamily: FONT.title,
+          color: HEX.cyan,
+        })
+        .setOrigin(0.5);
+      y += 18;
+      highlights.forEach((highlight) => {
+        this.add
+          .text(cx, y, `${highlight.title}: ${highlight.value}`, {
+            fontSize: '11px',
+            fontFamily: FONT.body,
+            color: HEX.white,
+          })
+          .setOrigin(0.5);
+        y += 16;
+      });
+      y += 10;
+    }
+
+    if (recentMatches[1]) {
+      this.add
+        .text(cx, y, `Previous winner: ${recentMatches[1].winnerName ?? 'Draw'}`, {
+          fontSize: '11px',
+          fontFamily: FONT.body,
+          color: HEX.textMuted,
+        })
+        .setOrigin(0.5);
+      y += 24;
+    }
+
     // Game summary
     this.add
       .text(cx, y, `Cards played: ${gs.cardsPlayed} • ${gs.config.playMode === 'teams' ? 'Team mode' : 'Solo rivals'} • ${gs.config.questionPool === 'elite' ? 'Elite pool' : 'Full pool'}`, {
@@ -133,7 +185,7 @@ export class FinalResultScene extends Phaser.Scene {
     // Buttons
     y += 50;
     createButton(this, cx, y, '🔄 PLAY AGAIN', () => {
-      resetState();
+      createRematch();
       this.scene.start('LobbyScene', { editions: gs.config.editions });
     }, { fontSize: '24px', paddingX: 28, paddingY: 12 });
 

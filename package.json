@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "node server/online-server.js"
   },
   "repository": {
     "type": "git",
@@ -17,7 +18,9 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "phaser": "^3.90.0"
+    "phaser": "^3.90.0",
+    "ws": "^8.21.3",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "typescript": "^7.0.2",

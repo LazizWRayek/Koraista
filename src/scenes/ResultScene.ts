@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
-import { getState, resetState } from '../GameState';
+import { createRematch, getState, resetState } from '../GameState';
 import { HEX, FONT, COLORS } from '../utils/theme';
 import { createButton, createPanel, createPill, drawGrassBackground, slideIn, spawnConfetti } from '../utils/ui';
+import { getPlayerBadges, recordMatch } from '../managers/ProfileManager';
 
 export class ResultScene extends Phaser.Scene {
   constructor() {
@@ -18,6 +19,7 @@ export class ResultScene extends Phaser.Scene {
 
     const winner =
       p1.score > p2.score ? p1.name : p2.score > p1.score ? p2.name : null;
+    recordMatch(gs.players);
 
     if (winner) {
       this.time.delayedCall(250, () => spawnConfetti(this, cx, 110));
@@ -56,9 +58,20 @@ export class ResultScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    const badges = winner ? getPlayerBadges(p1.score > p2.score ? p1 : p2) : [];
+    if (badges.length) {
+      this.add
+        .text(cx, 382, badges.join(' • '), {
+          fontSize: '11px',
+          fontFamily: FONT.body,
+          color: HEX.gold,
+        })
+        .setOrigin(0.5);
+    }
+
     // Replay
     createButton(this, cx, 445, '🔄  PLAY AGAIN', () => {
-      resetState();
+      createRematch();
       this.scene.start('MenuScene');
     }, { fontSize: '24px', paddingX: 24, paddingY: 10 });
 

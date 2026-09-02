@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { getState } from '../GameState';
+import { HEX, FONT, COLORS } from '../utils/theme';
+import { createButton, createPanel, createPill, drawGrassBackground, drawHeaderBar, slideIn, spawnConfetti } from '../utils/ui';
 
 /**
  * Penalty Shootout – the core mini-game.
@@ -31,6 +33,9 @@ export class PenaltyScene extends Phaser.Scene {
   }
 
   create(): void {
+    drawGrassBackground(this);
+    drawHeaderBar(this);
+    slideIn(this, 'right');
     this.phase = 'kicker';
     this.kickTarget = -1;
     this.keeperTarget = -1;
@@ -41,6 +46,8 @@ export class PenaltyScene extends Phaser.Scene {
 
   private clear(): void {
     this.children.removeAll(true);
+    drawGrassBackground(this);
+    drawHeaderBar(this);
   }
 
   private gridOriginX(): number {
@@ -48,16 +55,17 @@ export class PenaltyScene extends Phaser.Scene {
   }
 
   private gridOriginY(): number {
-    return 300;
+    return 280;
   }
 
   private drawGoalGrid(onCellClick: (idx: number) => void): void {
     const ox = this.gridOriginX();
     const oy = this.gridOriginY();
 
-    // Goal frame
+    createPanel(this, this.scale.width / 2, oy + 118, 392, 292, COLORS.cyan, 0.54);
+
     const gfx = this.add.graphics();
-    gfx.lineStyle(4, 0xffffff, 1);
+    gfx.lineStyle(4, COLORS.white, 1);
     gfx.strokeRect(ox - 4, oy - 4, GRID_COLS * CELL_W + 8, GRID_ROWS * CELL_H + 8);
 
     // Net pattern
@@ -77,11 +85,11 @@ export class PenaltyScene extends Phaser.Scene {
         const cellY = oy + r * CELL_H;
 
         const zone = this.add
-          .rectangle(cellX + CELL_W / 2, cellY + CELL_H / 2, CELL_W - 4, CELL_H - 4, 0x1a1a3e, 0.4)
+          .rectangle(cellX + CELL_W / 2, cellY + CELL_H / 2, CELL_W - 4, CELL_H - 4, COLORS.darkNavy, 0.46)
           .setInteractive({ useHandCursor: true });
 
-        zone.on('pointerover', () => zone.setFillStyle(0xe94560, 0.5));
-        zone.on('pointerout', () => zone.setFillStyle(0x1a1a3e, 0.4));
+        zone.on('pointerover', () => zone.setFillStyle(COLORS.crimson, 0.5));
+        zone.on('pointerout', () => zone.setFillStyle(COLORS.darkNavy, 0.46));
         zone.on('pointerdown', () => onCellClick(idx));
       }
     }
@@ -94,20 +102,21 @@ export class PenaltyScene extends Phaser.Scene {
     const kicker = gs.players[gs.kickerIndex];
 
     this.drawHUD();
+    createPill(this, this.scale.width / 2, 86, 'SHOOTOUT PRESSURE', HEX.gold);
 
     this.add
-      .text(this.scale.width / 2, 200, `${kicker.name} — KICK!`, {
-        fontSize: '26px',
-        fontFamily: 'Arial Black, sans-serif',
-        color: '#e94560',
+      .text(this.scale.width / 2, 168, `${kicker.name} — KICK!`, {
+        fontSize: '28px',
+        fontFamily: FONT.title,
+        color: HEX.white,
       })
       .setOrigin(0.5);
 
     this.add
-      .text(this.scale.width / 2, 240, 'Tap where you want to shoot', {
+      .text(this.scale.width / 2, 206, 'Pick your corner and trust your nerve.', {
         fontSize: '14px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#a0a0c0',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
       })
       .setOrigin(0.5);
 
@@ -115,6 +124,14 @@ export class PenaltyScene extends Phaser.Scene {
     this.add
       .text(this.scale.width / 2, this.gridOriginY() + GRID_ROWS * CELL_H + 50, '⚽', {
         fontSize: '48px',
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(this.scale.width / 2, this.gridOriginY() + GRID_ROWS * CELL_H + 88, 'Top corners beat nerves. Middle saves reputations.', {
+        fontSize: '11px',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
       })
       .setOrigin(0.5);
 
@@ -129,28 +146,31 @@ export class PenaltyScene extends Phaser.Scene {
     this.phase = 'handoff';
     const gs = getState();
     const keeper = gs.players[1 - gs.kickerIndex];
+    createPanel(this, this.scale.width / 2, this.scale.height / 2, 400, 220, COLORS.gold, 0.8);
+    createPill(this, this.scale.width / 2, this.scale.height / 2 - 70, 'PHONE SWAP', HEX.gold);
 
     this.add
       .text(this.scale.width / 2, this.scale.height / 2 - 40, `Pass the phone to\n${keeper.name}`, {
         fontSize: '28px',
-        fontFamily: 'Arial Black, sans-serif',
-        color: '#ffffff',
+        fontFamily: FONT.title,
+        color: HEX.white,
         align: 'center',
       })
       .setOrigin(0.5);
 
-    const btn = this.add
-      .text(this.scale.width / 2, this.scale.height / 2 + 60, 'READY', {
-        fontSize: '28px',
-        fontFamily: 'Arial Black, sans-serif',
-        color: '#0f3460',
-        backgroundColor: '#e94560',
-        padding: { x: 32, y: 12 },
+    this.add
+      .text(this.scale.width / 2, this.scale.height / 2 + 5, 'Keeper only. No peeking at the target.', {
+        fontSize: '13px',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
       })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+      .setOrigin(0.5);
 
-    btn.on('pointerdown', () => this.showKeeperPhase());
+    createButton(this, this.scale.width / 2, this.scale.height / 2 + 65, 'READY', () => this.showKeeperPhase(), {
+      fontSize: '24px',
+      paddingX: 28,
+      paddingY: 10,
+    });
   }
 
   private showKeeperPhase(): void {
@@ -160,20 +180,21 @@ export class PenaltyScene extends Phaser.Scene {
     const keeper = gs.players[1 - gs.kickerIndex];
 
     this.drawHUD();
+    createPill(this, this.scale.width / 2, 86, 'LAST LINE OF DEFENSE', HEX.cyan);
 
     this.add
-      .text(this.scale.width / 2, 200, `${keeper.name} — SAVE!`, {
-        fontSize: '26px',
-        fontFamily: 'Arial Black, sans-serif',
-        color: '#53d8fb',
+      .text(this.scale.width / 2, 168, `${keeper.name} — SAVE!`, {
+        fontSize: '28px',
+        fontFamily: FONT.title,
+        color: HEX.white,
       })
       .setOrigin(0.5);
 
     this.add
-      .text(this.scale.width / 2, 240, 'Tap where you want to dive', {
+      .text(this.scale.width / 2, 206, 'Read the shooter and attack the space.', {
         fontSize: '14px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#a0a0c0',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
       })
       .setOrigin(0.5);
 
@@ -198,6 +219,7 @@ export class PenaltyScene extends Phaser.Scene {
 
     if (scored) {
       gs.players[gs.kickerIndex].score++;
+      spawnConfetti(this, this.scale.width / 2, 170);
     }
 
     // Show result cells
@@ -232,10 +254,18 @@ export class PenaltyScene extends Phaser.Scene {
     const resultColor = scored ? '#00cc66' : '#e94560';
 
     this.add
-      .text(this.scale.width / 2, 180, resultText, {
+      .text(this.scale.width / 2, 170, resultText, {
         fontSize: '42px',
-        fontFamily: 'Arial Black, sans-serif',
+        fontFamily: FONT.title,
         color: resultColor,
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(this.scale.width / 2, 210, scored ? 'The keeper guessed wrong.' : 'The dive matched the shot.', {
+        fontSize: '13px',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
       })
       .setOrigin(0.5);
 
@@ -259,24 +289,13 @@ export class PenaltyScene extends Phaser.Scene {
     const gameOver = this.isGameOver(gs);
 
     const nextLabel = gameOver ? 'SEE RESULTS' : 'NEXT';
-    const btn = this.add
-      .text(this.scale.width / 2, this.gridOriginY() + GRID_ROWS * CELL_H + 80, nextLabel, {
-        fontSize: '26px',
-        fontFamily: 'Arial Black, sans-serif',
-        color: '#0f3460',
-        backgroundColor: '#e94560',
-        padding: { x: 28, y: 12 },
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-
-    btn.on('pointerdown', () => {
+    createButton(this, this.scale.width / 2, this.gridOriginY() + GRID_ROWS * CELL_H + 88, nextLabel, () => {
       if (gameOver) {
         this.scene.start('ResultScene');
       } else {
         this.showKickerPhase();
       }
-    });
+    }, { fontSize: '24px', paddingX: 24, paddingY: 10 });
   }
 
   private isGameOver(gs: ReturnType<typeof getState>): boolean {
@@ -295,23 +314,23 @@ export class PenaltyScene extends Phaser.Scene {
     this.add
       .text(20, 20, `${p1.name}: ${p1.score}`, {
         fontSize: '18px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#e94560',
+        fontFamily: FONT.body,
+        color: HEX.crimson,
       });
 
     this.add
       .text(this.scale.width - 20, 20, `${p2.name}: ${p2.score}`, {
         fontSize: '18px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#53d8fb',
+        fontFamily: FONT.body,
+        color: HEX.cyan,
       })
       .setOrigin(1, 0);
 
     this.add
       .text(this.scale.width / 2, 20, `Round ${Math.min(gs.currentRound, gs.maxRounds)} / ${gs.maxRounds}`, {
         fontSize: '14px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#a0a0c0',
+        fontFamily: FONT.body,
+        color: HEX.textMuted,
       })
       .setOrigin(0.5, 0);
   }

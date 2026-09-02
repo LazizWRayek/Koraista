@@ -3,6 +3,7 @@ import type { CardType, Edition } from '../data/types';
 export type PlayMode = 'solo' | 'teams';
 export type WinCondition = 'cards' | 'timed' | 'points';
 export type QuestionPool = 'all' | 'elite';
+export type NetworkMode = 'local' | 'online';
 
 export interface PlayerStats {
   correct: number;
@@ -29,9 +30,11 @@ export interface Team {
 }
 
 export interface GameConfig {
+  networkMode: NetworkMode;
   playMode: PlayMode;
   hasReferee: boolean;
   questionPool: QuestionPool;
+  deckSeed: number;
   winCondition: WinCondition;
   /** For 'cards' mode: how many cards to play */
   maxCards: number;
@@ -57,6 +60,8 @@ export interface GameState {
   isActive: boolean;
   /** When the game started (timestamp) */
   startedAt: number;
+  currentSceneKey: string;
+  summaryRecorded?: boolean;
 }
 
 const STORAGE_KEY = 'koraista_game_state';
@@ -65,9 +70,11 @@ let state: GameState | null = null;
 
 export function createDefaultConfig(): GameConfig {
   return {
+    networkMode: 'local',
     playMode: 'solo',
     hasReferee: false,
     questionPool: 'elite',
+    deckSeed: Date.now(),
     winCondition: 'cards',
     maxCards: 20,
     maxTime: 300,
@@ -93,6 +100,16 @@ export function createPlayer(name: string, teamId?: string): Player {
   };
 }
 
+export function createPlayerWithId(id: string, name: string, teamId?: string): Player {
+  return {
+    id,
+    name,
+    score: 0,
+    stats: createPlayerStats(),
+    teamId,
+  };
+}
+
 export function initGame(config: GameConfig, players: Player[], teams: Team[] = []): GameState {
   state = {
     config,
@@ -103,6 +120,8 @@ export function initGame(config: GameConfig, players: Player[], teams: Team[] = 
     elapsedTime: 0,
     isActive: true,
     startedAt: Date.now(),
+    currentSceneKey: 'GameplayScene',
+    summaryRecorded: false,
   };
   saveState();
   return state;
@@ -141,6 +160,7 @@ export function loadState(): GameState | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       state = JSON.parse(raw) as GameState;
+      nextPlayerId = state.players.length + 1;
       return state;
     }
   } catch {
@@ -158,6 +178,44 @@ export function getCurrentPlayer(): Player {
 export function getReferee(): Player | null {
   const gs = getState();
   return gs.players.find((player) => player.isReferee) ?? null;
+}
+
+export function hasSavedState(): boolean {
+  try {
+    return Boolean(localStorage.getItem(STORAGE_KEY));
+  } catch {
+    return false;
+  }
+}
+
+export function markScene(sceneKey: string): void {
+  const gs = getState();
+  gs.currentSceneKey = sceneKey;
+  saveState();
+}
+
+export function createRematch(): GameState {
+  const gs = getState();
+  const players = gs.players.map((player) => ({
+    ...player,
+    score: 0,
+    stats: createPlayerStats(),
+  }));
+  const teams = gs.teams.map((team) => ({ ...team, playerIds: [...team.playerIds] }));
+  return initGame(
+    {
+      ...gs.config,
+      deckSeed: Date.now(),
+    },
+    players,
+    teams,
+  );
+}
+
+export function markSummaryRecorded(): void {
+  const gs = getState();
+  gs.summaryRecorded = true;
+  saveState();
 }
 
 /** Advance to next player (skipping referee) */

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { HEX, FONT, COLORS } from '../utils/theme';
 import { createButton, createPanel, createPill, drawGrassBackground, slideIn, getLang, setLang } from '../utils/ui';
 import { initAudio, playTap, startCrowdAmbience, isMuted, toggleMute, updateCrowdVolume } from '../managers/SoundManager';
+import { hasSavedState, loadState } from '../managers/GameState';
 
 export class MainMenuScene extends Phaser.Scene {
   constructor() {
@@ -79,9 +80,22 @@ export class MainMenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    if (hasSavedState()) {
+      createButton(this, cx, 718, '⏯  RESUME MATCH', () => {
+        loadState();
+        this.scene.start('GameplayScene');
+      }, {
+        fontSize: '16px',
+        paddingX: 18,
+        paddingY: 8,
+        bgColor: '#333355',
+        textColor: HEX.white,
+      });
+    }
+
     // Penalty Shootout (legacy mode)
     const penaltyBtn = this.add
-      .text(cx, 730, '⚽ PENALTY SHOOTOUT', {
+      .text(cx, hasSavedState() ? 762 : 730, '⚽ PENALTY SHOOTOUT', {
         fontSize: '18px',
         fontFamily: FONT.body,
         color: HEX.cyan,

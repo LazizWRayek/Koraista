@@ -9,6 +9,7 @@ import {
   getStandings,
   getTeamScores,
   getReferee,
+  markScene,
   saveState,
 } from '../managers/GameState';
 import { CardManager } from '../managers/CardManager';
@@ -29,8 +30,9 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   create(): void {
+    markScene('GameplayScene');
     const gs = getState();
-    cardManager = new CardManager(gs.config.editions, gs.config.questionPool);
+    cardManager = new CardManager(gs.config.editions, gs.config.questionPool, gs.config.deckSeed);
 
     startCrowdAmbience();
     drawGrassBackground(this);

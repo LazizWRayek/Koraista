@@ -35,3 +35,8 @@ export function getState(): GameState {
 export function resetState(): void {
   state = null;
 }
+
+export function createRematch(): GameState {
+  const current = getState();
+  return initGame(current.players[0].name, current.players[1].name, current.maxRounds);
+}

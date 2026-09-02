@@ -8,9 +8,17 @@ import { varCards } from '../data/varCards';
 import { penaltyCards } from '../data/penaltyCards';
 
 /** Fisher-Yates shuffle (in-place) */
-function shuffle<T>(arr: T[]): T[] {
+function makeRng(seed: number): () => number {
+  let value = seed >>> 0;
+  return () => {
+    value = (value * 1664525 + 1013904223) % 4294967296;
+    return value / 4294967296;
+  };
+}
+
+function shuffle<T>(arr: T[], rng: () => number): T[] {
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
@@ -26,8 +34,10 @@ export class CardManager {
     penalty: [],
   };
   private usedIds = new Set<string>();
+  private seed: number;
 
-  constructor(editions?: Edition[], questionPool: QuestionPool = 'all') {
+  constructor(editions?: Edition[], questionPool: QuestionPool = 'all', seed = Date.now()) {
+    this.seed = seed;
     this.buildDecks(editions, questionPool);
   }
 
@@ -61,7 +71,7 @@ export class CardManager {
 
     // Shuffle each deck
     for (const key of Object.keys(this.decks) as CardType[]) {
-      shuffle(this.decks[key]);
+      shuffle(this.decks[key], makeRng(this.seed + key.length * 997));
     }
   }
 
@@ -84,8 +94,17 @@ export class CardManager {
     const types = allowedTypes ?? (Object.keys(this.decks) as CardType[]);
     const available = types.filter((t) => this.decks[t].length > 0);
     if (available.length === 0) return null;
-    const type = available[Math.floor(Math.random() * available.length)];
+    const type = available[Math.floor(makeRng(this.seed + this.usedIds.size + 17)() * available.length)];
     return this.draw(type);
+  }
+
+  drawById(type: CardType, id: string): Card | null {
+    const deck = this.decks[type];
+    const idx = deck.findIndex((card) => card.id === id);
+    if (idx === -1 || this.usedIds.has(id)) return null;
+    const [card] = deck.splice(idx, 1);
+    this.usedIds.add(id);
+    return card;
   }
 
   /** How many cards remain in a specific deck */
